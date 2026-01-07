@@ -541,6 +541,109 @@ def plot_siao_convergence(
 
 
 # =============================================================================
+# Benchmark Functions
+# =============================================================================
+
+class BenchmarkFunctions:
+    """
+    Standard benchmark functions for optimization testing.
+    """
+    
+    @staticmethod
+    def sphere(x: np.ndarray) -> float:
+        """Sphere function (unimodal): f(x) = sum(x^2)"""
+        return np.sum(x ** 2)
+    
+    @staticmethod
+    def rastrigin(x: np.ndarray) -> float:
+        """Rastrigin function (multimodal)"""
+        return 10 * len(x) + np.sum(x ** 2 - 10 * np.cos(2 * np.pi * x))
+    
+    @staticmethod
+    def rosenbrock(x: np.ndarray) -> float:
+        """Rosenbrock function (valley-shaped)"""
+        return np.sum(100 * (x[1:] - x[:-1]**2)**2 + (1 - x[:-1])**2)
+    
+    @staticmethod
+    def ackley(x: np.ndarray) -> float:
+        """Ackley function (multimodal)"""
+        d = len(x)
+        sum1 = np.sum(x ** 2)
+        sum2 = np.sum(np.cos(2 * np.pi * x))
+        return -20 * np.exp(-0.2 * np.sqrt(sum1 / d)) - np.exp(sum2 / d) + 20 + np.e
+    
+    @staticmethod
+    def griewank(x: np.ndarray) -> float:
+        """Griewank function (multimodal)"""
+        sum_sq = np.sum(x ** 2) / 4000
+        prod_cos = np.prod(np.cos(x / np.sqrt(np.arange(1, len(x) + 1))))
+        return sum_sq - prod_cos + 1
+
+
+def run_siao_demo(
+    func_name: str = 'sphere',
+    dim: int = 10,
+    pop_size: int = 30,
+    max_iter: int = 100,
+    show_plot: bool = True
+) -> Tuple[np.ndarray, float, Dict]:
+    """
+    Run SIAO optimization demo with a benchmark function.
+    
+    Args:
+        func_name: 'sphere', 'rastrigin', 'rosenbrock', 'ackley', 'griewank'
+        dim: Number of dimensions
+        pop_size: Population size
+        max_iter: Maximum iterations
+        show_plot: Whether to show convergence plot
+    
+    Returns:
+        Tuple of (best_solution, best_fitness, info_dict)
+    """
+    # Get benchmark function
+    functions = {
+        'sphere': (BenchmarkFunctions.sphere, -10, 10),
+        'rastrigin': (BenchmarkFunctions.rastrigin, -5.12, 5.12),
+        'rosenbrock': (BenchmarkFunctions.rosenbrock, -5, 10),
+        'ackley': (BenchmarkFunctions.ackley, -32.768, 32.768),
+        'griewank': (BenchmarkFunctions.griewank, -600, 600),
+    }
+    
+    if func_name not in functions:
+        raise ValueError(f"Unknown function: {func_name}. Choose from {list(functions.keys())}")
+    
+    func, lb_val, ub_val = functions[func_name]
+    lb = lb_val * np.ones(dim)
+    ub = ub_val * np.ones(dim)
+    
+    print(f"Running SIAO on {func_name} function (dim={dim})")
+    print("=" * 60)
+    
+    # Create and run SIAO
+    siao = SelfImprovedAquilaOptimizer(
+        objective_func=func,
+        dim=dim,
+        lb=lb,
+        ub=ub,
+        pop_size=pop_size,
+        max_iter=max_iter,
+        chaos_method='combined',
+        minimize=True
+    )
+    
+    best_solution, best_fitness, info = siao.optimize()
+    
+    print(f"\nResults:")
+    print(f"  Best Fitness: {best_fitness:.6e}")
+    print(f"  Best Solution (first 5): {best_solution[:min(5, dim)]}")
+    
+    if show_plot:
+        plot_siao_convergence(info['history'], info['stability'])
+    
+    return best_solution, best_fitness, info
+
+
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -548,32 +651,11 @@ if __name__ == '__main__':
     print("Self-Improved Aquila Optimizer (SIAO) - Demo")
     print("=" * 60)
     
-    # Benchmark: Sphere function
-    def sphere(x):
-        return np.sum(x ** 2)
-    
-    # Configuration
-    dim = 10
-    lb = -10 * np.ones(dim)
-    ub = 10 * np.ones(dim)
-    
-    # Create and run SIAO
-    siao = SelfImprovedAquilaOptimizer(
-        objective_func=sphere,
-        dim=dim,
-        lb=lb,
-        ub=ub,
+    # Run demo with Sphere function
+    best_solution, best_fitness, info = run_siao_demo(
+        func_name='sphere',
+        dim=10,
         pop_size=30,
         max_iter=100,
-        chaos_method='combined',
-        minimize=True
+        show_plot=True
     )
-    
-    best_solution, best_fitness, info = siao.optimize()
-    
-    print(f"\nOptimization Results:")
-    print(f"  Best Fitness (Sphere): {best_fitness:.6e}")
-    print(f"  Best Solution: {best_solution[:5]}... (first 5 dims)")
-    
-    # Plot convergence
-    plot_siao_convergence(info['history'], info['stability'])
