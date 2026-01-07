@@ -4,12 +4,13 @@ IP-200 Reactor Data Ingestion Pipeline
 A scalable Python pipeline for ingesting, preprocessing, and structuring
 RELAP5 simulation data for nuclear reactor operating class classification.
 
-Supports 5 operating classes:
-- Steady State
-- PORV Stuck Open (100%)
-- Steam Generator Tube Rupture (10%)
-- Feedwater Line Break (50%)
-- RCP Failure (1 out of 4)
+Supports 6 operating classes:
+1. Steady State (100% power)
+2. Transient / Power Change (60%-80%)
+3. Pressurizer PORV Stuck Open (100%)
+4. Steam Generator Tube Rupture (10%)
+5. Feedwater Line Break (50%)
+6. Reactor Coolant Pump Failure (1 out of 4)
 
 Author: Nuclear Systems Data Engineer
 """
@@ -37,10 +38,11 @@ logger = logging.getLogger(__name__)
 
 CLASS_MAP = {
     'steady_state': 0,
-    'porv_stuck_open': 1,
-    'sg_tube_rupture': 2,
-    'feedwater_break': 3,
-    'rcp_failure': 4
+    'transient_power_change': 1,
+    'porv_stuck_open': 2,
+    'sg_tube_rupture': 3,
+    'feedwater_break': 4,
+    'rcp_failure': 5
 }
 
 CLASS_NAMES = {v: k for k, v in CLASS_MAP.items()}
@@ -50,6 +52,12 @@ CLASS_PATTERNS = {
     'steady_state': [
         r'steady\s*state',
         r'ss\d+',
+    ],
+    'transient_power_change': [
+        r'power\s*change',
+        r'pp\d+p',
+        r'ip200-pp',
+        r'transient',
     ],
     'porv_stuck_open': [
         r'pzrv',
