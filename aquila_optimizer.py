@@ -21,6 +21,7 @@ import logging
 from typing import Tuple, Optional, List, Callable
 import numpy as np
 from scipy import stats as scipy_stats
+from scipy.special import gamma as scipy_gamma
 import warnings
 
 logging.basicConfig(
@@ -234,8 +235,8 @@ class AquilaOptimizer:
         """
         beta = 1.5
         sigma_u = (
-            np.math.gamma(1 + beta) * np.sin(np.pi * beta / 2) /
-            (np.math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))
+            scipy_gamma(1 + beta) * np.sin(np.pi * beta / 2) /
+            (scipy_gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))
         ) ** (1 / beta)
         
         u = np.random.normal(0, sigma_u, dim)
